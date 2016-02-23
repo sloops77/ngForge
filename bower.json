@@ -7,7 +7,7 @@
   ],
   "description": "Angular wrappers around forge modules. Allows quick dev in browser mode without loading in forge.js",
   "main": [
-    "dist/forge.js"
+    "dist/ngForge.js"
   ],
   "keywords": [
     "mobile",

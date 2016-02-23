@@ -10,8 +10,8 @@ module.exports = {
   '/*!\n' +
   ' * Copyright 2015 Thinking Bytes Ltd.\n' +
   ' *\n' +
-  ' * NgForge, v<%= pkg.version %>\n' +
-  ' * Angular wrappers for Trigger.io (forge) modules .\n' +
+  ' * ngForge, v<%= pkg.version %>\n' +
+  ' * Angular wrappers for Trigger.io (forge) modules.\n' +
   ' * http://trigger.io/\n' +
   ' * http://angularjs.org/\n' +
   ' *\n' +
