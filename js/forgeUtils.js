@@ -1,5 +1,6 @@
 angular.module('ngForge').factory('forgeUtils', function($q) {
   'use strict';
+  var slice = [].slice;
 
   return {
     funcTag: '[object Function]',
@@ -56,7 +57,8 @@ angular.module('ngForge').factory('forgeUtils', function($q) {
     },
     lift: function(_this, f) {
       return function() {
-        var allArgs, deferred, errorFn, successFn;
+        var allArgs, args, deferred, errorFn, successFn;
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
         deferred = $q.defer();
         successFn = function() {
           if (!!arguments && arguments.length === 1) {
@@ -72,9 +74,10 @@ angular.module('ngForge').factory('forgeUtils', function($q) {
             return deferred.reject(arguments);
           }
         };
-        allArgs = arguments.slice(0).concat([successFn, errorFn]);
+        allArgs = args.concat([successFn, errorFn]);
         f.apply(_this, allArgs);
         return deferred.promise;
+
       };
     },
     liftGlobalFn: function(f) {
