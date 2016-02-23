@@ -1,0 +1,5 @@
+{
+  "version": "<%= pkg.version %>",
+  "date": "<%= date %>",
+  "time": "<%= time %>"
+}

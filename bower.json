@@ -1,0 +1,37 @@
+{
+  "name": "ngForge",
+  "version": "0.1",
+  "homepage": "https://github.com/sloops77/ngForge",
+  "authors": [
+    "Andre Olave <andres.olave@thinkingbytes.net"
+  ],
+  "description": "Angular wrappers around forge modules. Allows quick dev in browser mode without loading in forge.js",
+  "main": [
+    "dist/forge.js"
+  ],
+  "keywords": [
+    "mobile",
+    "html5",
+    "trigger",
+    "triggerio",
+    "forge",
+    "angularjs",
+    "angular",
+    "ionic"
+  ],
+  "license": "MIT",
+  "private": false,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "components",
+    "test",
+    "tests",
+    "src",
+    "gulpfile.js"
+  ],
+  "dependencies": {
+    "angular": "1.4.3"
+  }
+}
