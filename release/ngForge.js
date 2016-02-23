@@ -1,7 +1,7 @@
 /*!
  * Copyright 2015 Thinking Bytes Ltd.
  *
- * NgForge, v0.0.1
+ * ngForge, v0.1.0
  * Angular wrappers for Trigger.io (forge) modules.
  * http://trigger.io/
  * http://angularjs.org/
@@ -1370,5 +1370,4 @@ angular.module('ngForge').factory('forgeUtils', function($q) {
     }
   };
 });
-
 })();
