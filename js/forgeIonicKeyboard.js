@@ -1,39 +1,29 @@
-angular.module('ngForge').provider('ionic_keyboard', function() {
+angular.module('ngForge').provider('$forgeIonicKeyboard', function() {
   'use strict';
 
   return {
-    $get: function($injector, $q, forge, logger) {
-      if (forge.dummy) {
-        logger.debug("using ionicKeyboardDummy for keyboardcontrol");
+    $get: ['$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+        var ionicKeyboardDummy;
+        ionicKeyboardDummy = {
+          disableScroll: function(val, success) {
+            logger.info("$forgeIonicKeyboard.disableScroll(" + val + ")");
+            return typeof success === "function" ? success() : void 0;
+          },
+          hideKeyboardAccessoryBar: function(val, success) {
+            logger.info("$forgeIonicKeyboard.hideKeyboardAccessoryBar(" + val + ")");
+            return typeof success === "function" ? success() : void 0;
+          },
+          isKeyboardVisible: function(success) {
+            logger.info('$forgeIonicKeyboard.isKeyboardVisible');
+            return typeof success === "function" ? success() : void 0;
+          },
+          close: function(success) {
+            logger.info('$forgeIonicKeyboard.close');
+            return typeof success === "function" ? success() : void 0;
+          }
+        };
+        return ngForgeUtils.liftObject(forge.dummy ? ionicKeyboardDummy : forge.ionic_keyboard);
       }
-      if (forge.dummy) {
-        return this.ionicKeyboardDummy(logger);
-      } else {
-        return this.forgeIonicKeyboard(forge);
-      }
-    },
-    ionicKeyboardDummy: function(logger) {
-      return {
-        disableScroll: function(val, f) {
-          logger.info("ionic_keyboard.disableScroll(" + val + ")");
-          return typeof f === "function" ? f() : void 0;
-        },
-        hideKeyboardAccessoryBar: function(val, f) {
-          logger.info("ionic_keyboard.hideKeyboardAccessoryBar(" + val + ")");
-          return typeof f === "function" ? f() : void 0;
-        },
-        isKeyboardVisible: function(f) {
-          logger.info('ionic_keyboard.isKeyboardVisible');
-          return typeof f === "function" ? f() : void 0;
-        },
-        close: function(f) {
-          logger.info('ionic_keyboard.close');
-          return typeof f === "function" ? f() : void 0;
-        }
-      };
-    },
-    forgeIonicKeyboard: function(forge) {
-      return forge.ionic_keyboard;
-    }
+    ]
   };
 });

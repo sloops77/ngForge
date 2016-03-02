@@ -1,27 +1,18 @@
-angular.module('ngForge').provider('sms', function() {
+angular.module('ngForge').provider('$forgeSms', function() {
   'use strict';
 
   return {
-    $get: function($injector, $q, forge, logger) {
-      if (forge.dummy) {
-        logger.debug("using smsDummy for playing images");
+    $get: [
+      '$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+        var smsDummy;
+        smsDummy = {
+          send: function(params, success, error) {
+            logger.debug("$forgeSms.send " + params.body + " to " + (JSON.stringify(params.to)));
+            return typeof success === "function" ? success() : void 0;
+          }
+        };
+        return ngForgeUtils.liftObject(forge.dummy ? smsDummy : forge.sms);
       }
-      if (forge.dummy) {
-        return this.smsDummy(logger);
-      } else {
-        return this.forgeSms(forge);
-      }
-    },
-    smsDummy: function(logger) {
-      return {
-        send: function(params, success, error) {
-          logger.debug("sms.send " + params.body + " to " + (JSON.stringify(params.to)));
-          return typeof success === "function" ? success() : void 0;
-        }
-      };
-    },
-    forgeSms: function(forge) {
-      return forge.sms;
-    }
+    ]
   };
 });

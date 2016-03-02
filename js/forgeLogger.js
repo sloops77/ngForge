@@ -1,43 +1,47 @@
-angular.module('ngForge').factory('logger', function(forgeUtils) {
-  'use strict';
-
+angular.module('ngForge').factory('logger', function(ngForgeUtils) {
   var error, group, groupEnd, groups, log, logger, message;
   if (!(window.forge && window.forge.is && window.forge.is.mobile())) {
     return console;
   }
   error = function(args) {
-    var allErrors;
+    var allErrors, f;
     args = Array.prototype.slice.call(args);
-    allErrors = forgeUtils.filter(args, function(o) {
+    allErrors = ngForgeUtils.filter(args, function(o) {
       return o && o instanceof Error;
     });
     if (allErrors && allErrors.length) {
-      return allErrors[0];
+      return f = allErrors[0];
     }
   };
+
   message = function(args) {
     return Array.prototype.slice.call(args).toString();
   };
+
   groups = [];
+
   group = function(name) {
     log("▾ " + name);
     return groups.push(name);
   };
+
   groupEnd = function() {
     return groups.pop();
   };
+
   log = function(message, error, method) {
+    var i, j, padding, ref;
     if (method == null) {
       method = forge.logging.log;
     }
-
-    var padding = "";
-    for (var i = 0; i < group.length; ++i) {
-      padding += "| ";
+    padding = '';
+    for (i = j = 0, ref = group.length; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+      padding += '| ';
     }
-    return method(padding + message, error);
+    return forge.logging.log("" + padding + message, error);
   };
-  logger = {
+
+  return {
     log: function() {
       return log(message(arguments), error(arguments));
     },
@@ -60,5 +64,5 @@ angular.module('ngForge').factory('logger', function(forgeUtils) {
     groupCollapsed: group,
     groupEnd: groupEnd
   };
-  return logger;
 });
+

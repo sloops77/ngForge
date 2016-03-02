@@ -4,10 +4,8 @@ angular.module('ngForge').constant('forgeConfig', {
   testConnectionUrl: 'ping'
 });
 
-angular.module('ngForge').factory('forge', function($window, $interval, $http, forgeConfig) {
-  'use strict';
-  var dummyForge;
-  dummyForge = {
+angular.module('ngForge').factory('forge', ['$http', '$interval', '$window', 'logger', 'ngForgeConfig', function($http, $interval, $window, logger, ngForgeConfig) {
+  var dummyForge = {
     dummy: true,
     is: {
       web: function() {
@@ -74,13 +72,13 @@ angular.module('ngForge').factory('forge', function($window, $interval, $http, f
           });
         };
       })(this);
-      return $http.get(forgeConfig.testConnectionUrl).then((function(_this) {
+      return $http.get(ngForgeConfig.testConnectionUrl).then((function(_this) {
         return function() {
           if (!_this.is.connection._connected) {
             return triggerListeners(true);
           }
         };
-        })(this))["catch"]((function(_this) {
+      })(this))["catch"]((function(_this) {
         return function() {
           if (_this.is.connection._connected) {
             return triggerListeners(false);
@@ -90,12 +88,15 @@ angular.module('ngForge').factory('forge', function($window, $interval, $http, f
     }
   };
   if ($window.forge) {
+    logger.info("ngForge.$forge: using trigger.io");
     return $window.forge;
   } else {
+    logger.info("ngForge.$forge: using dummy");
     dummyForge.testConnection();
     $interval(function() {
       return dummyForge.testConnection();
     }, 5000);
     return dummyForge;
   }
-});
+}
+]);

@@ -1,19 +1,18 @@
-angular.module('ngForge').provider('httpProxy', function($httpProvider) {
+angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($httpProvider) {
   'use strict';
 
   return {
-    $get: function($http, $injector, $q, $rootScope, $upload, forge, forgeUtils, logger) {
-      if (forge.dummy) {
-        logger.debug("using $http for comms");
+    interceptors: [],
+    $get: ['$http', '$injector', '$q', '$rootScope', '$upload', 'forge', 'logger', 'ngForgeUtils', function($http, $injector, $q, $rootScope, $upload, forge, logger, ngForgeUtils) {
+        if (forge.dummy) {
+          return this.ngHttp($http, $upload, logger);
+        } else {
+          return this.forgeHttp($http, $injector, $q, $rootScope, $upload, forge, ngForgeUtils, logger);
+        }
       }
-      if (forge.dummy) {
-        return this.ngHttp($http, $upload, logger);
-      } else {
-        return this.forgeHttp($http, $injector, $q, $rootScope, $upload, forge, forgeUtils, logger);
-      }
-    },
-    httpProvider: $httpProvider,
+    ],
     ngHttp: function($http, $upload, logger) {
+      logger.debug("using $http for comms");
       return {
         request: function(config) {
           switch (config.swMethod) {
@@ -74,22 +73,22 @@ angular.module('ngForge').provider('httpProxy', function($httpProvider) {
 
      $httpProvider.defaults.headers.* configuration
      */
-    forgeHttp: function($http, $injector, $q, $rootScope, $upload, forge, forgeUtils, logger) {
+    forgeHttp: function($http, $injector, $q, $rootScope, $upload, forge, ngForgeUtils, logger) {
       var reversedInterceptors;
       logger.debug("using forge for comms");
       reversedInterceptors = [];
-      angular.forEach(this.httpProvider.interceptors, function(interceptorFactory) {
+      angular.forEach(this.interceptors, function(interceptorFactory) {
         return reversedInterceptors.unshift(angular.isString(interceptorFactory) ? $injector.get(interceptorFactory) : $injector.invoke(interceptorFactory));
       });
       return {
         _convertRequest: function(config) {
-          config.accepts = ['application/json'];
+          config['accepts'] = ['application/json'];
           if (config.file == null) {
-            config.dataType = config.responseType || 'json';
+            config['dataType'] = config.responseType || 'json';
           }
-          config.type = config.method.toUpperCase();
+          config['type'] = config.method.toUpperCase();
           if (config.file != null) {
-            config.files = [config.file];
+            config['files'] = [config.file];
             delete config.file;
           }
           return config;
@@ -136,13 +135,14 @@ angular.module('ngForge').provider('httpProxy', function($httpProvider) {
         },
         _getRequest: function(url, config) {
           var cache, cachedResp, deferred, handleResponse, isSuccess, promise, resolvePromise, resolvePromiseWithResult;
+          logger.info("_getRequest(" + url + ", " + (JSON.stringify(config)) + ")");
           deferred = $q.defer();
           promise = deferred.promise;
-          if (forgeUtils.isObject(config != null ? config.cache : void 0)) {
+          if (ngForgeUtils.isObject(config != null ? config.cache : void 0)) {
             cache = config != null ? config.cache : void 0;
           }
           isSuccess = function(status) {
-            return status >= 200 && status < 300;
+            return 200 <= status && status < 300;
           };
           resolvePromise = function(data, status, headers, statusText) {
             status = Math.max(status, 0);
@@ -155,16 +155,16 @@ angular.module('ngForge').provider('httpProxy', function($httpProvider) {
             });
           };
           resolvePromiseWithResult = function(result) {
-            return resolvePromise(result.data, result.status, forgeUtils.safeClone(result.headers), result.statusText);
+            return resolvePromise(result.data, result.status, ngForgeUtils.safeClone(result.headers), result.statusText);
           };
           if (cache) {
             cachedResp = cache.get(url);
             if (cachedResp != null) {
-              if (forgeUtils.isFunction(cachedResp.then)) {
+              if (ngForgeUtils.isFunction(cachedResp.then)) {
                 cachedResp.then(resolvePromiseWithResult, resolvePromiseWithResult);
               } else {
                 if (Array.isArray(cachedResp)) {
-                  resolvePromise(cachedResp[1], cachedResp[0], forgeUtils.safeClone(cachedResp[2]), cachedResp[3]);
+                  resolvePromise(cachedResp[1], cachedResp[0], ngForgeUtils.safeClone(cachedResp[2]), cachedResp[3]);
                 } else {
                   resolvePromise(cachedResp, 200, {}, 'OK');
                 }
@@ -198,11 +198,10 @@ angular.module('ngForge').provider('httpProxy', function($httpProvider) {
         },
         _forgeRequester: function(forgeOptions) {
           var deferred;
-          logger.debug("_forgeRequester");
+          logger.info("_forgeRequester");
           deferred = $q.defer();
           forgeOptions.success = function(data, headers) {
-            logger.debug("success");
-            logger.debug(data);
+            logger.debug("ngForge.$forgeHttp.success: " + (JSON.stringify(data)));
             deferred.resolve({
               status: 200,
               data: data,
@@ -220,15 +219,11 @@ angular.module('ngForge').provider('httpProxy', function($httpProvider) {
             status = 400;
             try {
               status = parseInt(error.statusCode);
-            } catch (_error) {
-              //do nothing
-            }
+            } catch (_error) {}
             data = error.content;
             try {
               data = JSON.parse(error.content);
-            } catch (_error) {
-              //do nothing
-            }
+            } catch (_error) {}
             deferred.reject({
               status: status,
               data: data,
@@ -273,11 +268,12 @@ angular.module('ngForge').provider('httpProxy', function($httpProvider) {
           };
           promise.error = function(fn) {
             promise["catch"](function(response) {
-              var errorData;
+              var error, errorData;
               errorData = (function() {
                 try {
                   return JSON.parse(response.data);
                 } catch (_error) {
+                  error = _error;
                   return response.data;
                 }
               })();
@@ -290,4 +286,5 @@ angular.module('ngForge').provider('httpProxy', function($httpProvider) {
       };
     }
   };
-});
+}]
+);
