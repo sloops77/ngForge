@@ -1,7 +1,7 @@
 /*!
  * Copyright 2015 Thinking Bytes Ltd.
  *
- * ngForge, v0.2.1
+ * ngForge, v0.2.2
  * Angular wrappers for Trigger.io (forge) modules.
  * http://trigger.io/
  * http://angularjs.org/
@@ -35,6 +35,14 @@ angular.module('ngForge').provider('$forge', function() {
           ios       : function () {
             return false;
           },
+          orientation: {
+            portrait: function() {
+              return true;
+            },
+            landscape: function() {
+              return false;
+            }
+          },
           connection: {
             _connected: false,
             connected : function () {
@@ -46,6 +54,31 @@ angular.module('ngForge').provider('$forge', function() {
           }
         },
         event         : {
+          menuPressed          : {
+            addListener   : function (callback, error) {
+              return void 0;
+            }
+          },
+          backPressed          : {
+            addListener   : function (callback, error) {
+              return void 0;
+            },
+            preventDefault: function (callback, error) {
+              return void 0;
+            }
+          },
+          orientationChange : {
+            addListener   : function (callback, error) {
+              return void 0;
+            }
+          },
+          connectionStateChange: {
+            listeners  : [],
+            addListener: function (callback, error) {
+              this.listeners.push(callback);
+              return void 0;
+            }
+          },
           messagePushed        : {
             addListener: function (callback, error) {
               return void 0;
@@ -61,20 +94,24 @@ angular.module('ngForge').provider('$forge', function() {
               return void 0;
             }
           },
-          backPressed          : {
-            addListener   : function (callback, error) {
-              return void 0;
-            },
-            preventDefault: function (callback, error) {
-              return void 0;
-            }
-          },
-          connectionStateChange: {
-            listeners  : [],
+          statusBarTapped           : {
             addListener: function (callback, error) {
-              this.listeners.push(callback);
               return void 0;
             }
+          }
+        },
+        tools: {
+          UUID: function() {
+            function s4() {
+              return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+            }
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+              s4() + '-' + s4() + s4() + s4();
+          },
+          getURL: function(name, success, error) {
+            success(name);
           }
         },
         testConnection: function () {
@@ -939,6 +976,14 @@ angular.module('ngForge').provider('$forgeParse', function() {
         var parseDummy;
         parseDummy = {
           dummyChannels: [''],
+          badgeNumber: 0,
+          getBadgeNumber: function(success) {
+            success(this.badgeNumber);
+          },
+          setBadgeNumber: function(number, success) {
+            this.badgeNumber = number;
+            success();
+          },
           installationInfo: function(success) {
             $forgeLogger.info('parseDummy info');
             return success({
