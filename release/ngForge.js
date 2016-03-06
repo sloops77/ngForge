@@ -1,7 +1,7 @@
 /*!
  * Copyright 2015 Thinking Bytes Ltd.
  *
- * ngForge, v0.2.0
+ * ngForge, v0.2.1
  * Angular wrappers for Trigger.io (forge) modules.
  * http://trigger.io/
  * http://angularjs.org/
@@ -15,113 +15,119 @@
 (function() {
 angular.module('ngForge', []);
 
-angular.module('ngForge').factory('forge', ['$http', '$interval', '$window', 'logger', 'ngForgeConfig', function($http, $interval, $window, logger, ngForgeConfig) {
-  var dummyForge = {
-    dummy: true,
-    is: {
-      web: function() {
-        return true;
-      },
-      mobile: function() {
-        return false;
-      },
-      android: function() {
-        return false;
-      },
-      ios: function() {
-        return false;
-      },
-      connection: {
-        _connected: false,
-        connected: function() {
-          return this._connected;
-        },
-        wifi: function() {
-          return this._connected;
-        }
-      }
-    },
-    event: {
-      messagePushed: {
-        addListener: function(callback, error) {
-          return void 0;
-        }
-      },
-      appPaused: {
-        addListener: function(callback, error) {
-          return void 0;
-        }
-      },
-      appResumed: {
-        addListener: function(callback, error) {
-          return void 0;
-        }
-      },
-      backPressed: {
-        addListener: function(callback, error) {
-          return void 0;
-        },
-        preventDefault: function(callback, error) {
-          return void 0;
-        }
-      },
-      connectionStateChange: {
-        listeners: [],
-        addListener: function(callback, error) {
-          this.listeners.push(callback);
-          return void 0;
-        }
-      }
-    },
-    testConnection: function() {
-      var triggerListeners;
-      triggerListeners = (function(_this) {
-        return function(connectionState) {
-          _this.is.connection._connected = connectionState;
-          return _this.event.connectionStateChange.listeners.forEach(function(l) {
-            return l();
-          });
-        };
-      })(this);
-      return $http.get(ngForgeConfig.testConnectionUrl).then((function(_this) {
-        return function() {
-          if (!_this.is.connection._connected) {
-            return triggerListeners(true);
+angular.module('ngForge').provider('$forge', function() {
+  return {
+    testConnectionUrl: 'ping',
+    $get              : ['$http', '$interval', '$window', '$forgeLogger', function($http, $interval, $window, $forgeLogger) {
+      var forgeProvider = this;
+      var dummyForge = {
+        dummy         : true,
+        is            : {
+          web       : function () {
+            return true;
+          },
+          mobile    : function () {
+            return false;
+          },
+          android   : function () {
+            return false;
+          },
+          ios       : function () {
+            return false;
+          },
+          connection: {
+            _connected: false,
+            connected : function () {
+              return this._connected;
+            },
+            wifi      : function () {
+              return this._connected;
+            }
           }
-        };
-      })(this))["catch"]((function(_this) {
-        return function() {
-          if (_this.is.connection._connected) {
-            return triggerListeners(false);
+        },
+        event         : {
+          messagePushed        : {
+            addListener: function (callback, error) {
+              return void 0;
+            }
+          },
+          appPaused            : {
+            addListener: function (callback, error) {
+              return void 0;
+            }
+          },
+          appResumed           : {
+            addListener: function (callback, error) {
+              return void 0;
+            }
+          },
+          backPressed          : {
+            addListener   : function (callback, error) {
+              return void 0;
+            },
+            preventDefault: function (callback, error) {
+              return void 0;
+            }
+          },
+          connectionStateChange: {
+            listeners  : [],
+            addListener: function (callback, error) {
+              this.listeners.push(callback);
+              return void 0;
+            }
           }
-        };
-      })(this));
-    }
-  };
-  if ($window.forge) {
-    logger.info("ngForge.$forge: using trigger.io");
-    return $window.forge;
-  } else {
-    logger.info("ngForge.$forge: using dummy");
-    dummyForge.testConnection();
-    $interval(function() {
-      return dummyForge.testConnection();
-    }, 5000);
-    return dummyForge;
+        },
+        testConnection: function () {
+          var triggerListeners;
+          triggerListeners = (function (_this) {
+            return function (connectionState) {
+              _this.is.connection._connected = connectionState;
+              return _this.event.connectionStateChange.listeners.forEach(function (l) {
+                return l();
+              });
+            };
+          })(this);
+          return $http.get(forgeProvider.testConnectionUrl).then((function (_this) {
+            return function () {
+              if (!_this.is.connection._connected) {
+                return triggerListeners(true);
+              }
+            };
+          })(this))["catch"]((function (_this) {
+            return function () {
+              if (_this.is.connection._connected) {
+                return triggerListeners(false);
+              }
+            };
+          })(this));
+        }
+      };
+      if ($window.forge) {
+        $forgeLogger.info("ngForge.$forge: using trigger.io");
+        return $window.forge;
+      } else {
+        $forgeLogger.info("ngForge.$forge: using dummy");
+        dummyForge.testConnection();
+        $interval(function () {
+          return dummyForge.testConnection();
+        }, 5000);
+        return dummyForge;
+      }
+    }]
   }
-}
-]);
+});
 
 angular.module('ngForge').provider('$forgeContact', function() {
   'use strict';
 
   return {
     $get: [
-      '$injector', '$q', 'forge', 'logger', 'ngForgeUtils', 'ngForgeConfig', function($injector, $q, forge, logger, ngForgeUtils, ngForgeConfig) {
-        var contactDummy;
-        contactDummy = {
+      '$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
+        var $forgeContactProvider = this;
+
+        var contactDummy = {
           select: function(success, error) {
-            logger.debug("select");
+            $forgeLogger.debug("select");
             return typeof success === "function" ? success() : void 0;
           },
           selectAll: function(fields, success, error) {
@@ -130,19 +136,325 @@ angular.module('ngForge').provider('$forgeContact', function() {
               success = fields;
               error = success;
             }
-            logger.debug("selectAll");
-            return typeof success === "function" ? success(ngForgeConfig.sampleContacts.map(function(c) {
+            $forgeLogger.debug("selectAll");
+            return typeof success === "function" ? success($forgeContactProvider.sampleContacts.map(function(c) {
               return ngForgeUtils.pick(c, fields);
             })) : void 0;
           },
           selectById: function(id, success, error) {
-            logger.debug("selectById");
-            return typeof success === "function" ? success(ngForgeUtils.find(ngForgeConfig.sampleContacts, function(c) {
+            $forgeLogger.debug("selectById");
+            return typeof success === "function" ? success(ngForgeUtils.find($forgeContactProvider.sampleContacts, function(c) {
               return c.id === id;
             })) : void 0;
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? contactDummy : forge.contact);
+        return ngForgeUtils.liftObject($forge.dummy ? contactDummy : forge.contact);
+      }
+    ],
+    sampleContacts: [
+      {
+        "id": "14894",
+        "displayName": "Gal Gadot",
+        "name": {
+          "formatted": "Gal Gadot",
+          "familyName": "Gadot",
+          "givenName": "Gal",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "+447574712444",
+            "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "148900",
+        "displayName": "Tom",
+        "name": {
+          "formatted": "Tom",
+          "familyName": "",
+          "givenName": "Tom",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "+44 751-5097756+13",
+            "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "14894",
+        "displayName": "Brigid",
+        "name": {
+          "formatted": "Brigid",
+          "familyName": "",
+          "givenName": "Brigid",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "+33 7817471244",
+            "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "14895",
+        "displayName": "Eddie Redmayne",
+        "name": {
+          "formatted": "Eddie Redmayne",
+          "familyName": "Fenech",
+          "givenName": "Eddie",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "+447432111412",
+            "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "122",
+        "displayName": "Arow",
+        "name": {
+          "formatted": "Arow",
+          "familyName": "Arow"
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "+972 963587331",
+            "type": "mobile",
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "299",
+        "displayName": "Bad Phone",
+        "name": {
+          "formatted": "Bad Phone",
+          "familyName": "BPhone"
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "+97288898",
+            "type": "mobile",
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "1",
+        "displayName": "Girt Wenders",
+        "name": {
+          "formatted": "Girt Wenders",
+          "familyName": "Wenders",
+          "givenName": "Girt",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "+972 521123241",
+            "type": "mobile",
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "690",
+        "displayName": "Dodgy Bro",
+        "name": {
+          "formatted": "Dodgy Bro",
+          "familyName": "Bro",
+          "givenName": "Dodgy",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "Doge",
+        "phoneNumbers": [
+          {
+            "value": "+44 7967929796",
+            "type": "mobile",
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "691",
+        "displayName": "Toby Bro",
+        "name": {
+          "formatted": "Toby Bro",
+          "familyName": "Bro",
+          "givenName": "Toby",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "Tobe",
+        "phoneNumbers": [
+          {
+            "value": "+44-783-241324",
+            "type": "work",
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "2",
+        "displayName": "Mr Bodie Carstairs",
+        "name": {
+          "formatted": "Bodie Carstairs",
+          "familyName": "Carstairs",
+          "givenName": "Bodie",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "Bo",
+        "phoneNumbers": [
+          {
+            "value": "+447321123324",
+            "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "3",
+        "displayName": "Lucy Cleaner",
+        "name": {
+          "formatted": "Lucy Cleaner",
+          "familyName": "Cleaner",
+          "givenName": "Lucy",
+          "middleName": "middle",
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "+447321132131",
+            "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "33",
+        "displayName": "Ches",
+        "name": {
+          "formatted": "Ches",
+          "familyName": "",
+          "givenName": "Ches",
+          "middleName": "",
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "",
+        "phoneNumbers": [
+          {
+            "value": "0543742342",
+            "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "4",
+        "displayName": "Sarah",
+        "name": {
+          "formatted": "Sarah",
+          "familyName": "",
+          "givenName": "Sarah",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "nickname": "tush",
+        "phoneNumbers": [
+          {
+            "value": "+972547434302",
+            "type": "work",
+            "pref": false
+          }, {
+            "value": "+335723131231",
+            "type": "home",
+            "pref": false
+          }, {
+            "value": "+447312311232",
+            "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
       }
     ]
   };
@@ -152,9 +464,10 @@ angular.module('ngForge').provider('$forgeFacebook', function() {
   'use strict';
 
   return {
-    $get: ['$injector', 'forge', 'logger', 'ngForgeConfig', 'ngForgeUtils', function($injector, forge, logger, ngForgeConfig, ngForgeUtils) {
-        var ngFacebook;
-        ngFacebook = {
+    $get: ['$injector', '$forge', 'ngForgeUtils', function($injector, $forge, ngForgeUtils) {
+      var $forgeFacebookProvider = this;
+
+      var ngFacebook = {
           authorize: function(permissions, audience, success, error) {
             return success({
               access_token: 'dfs',
@@ -184,12 +497,13 @@ angular.module('ngForge').provider('$forgeFacebook', function() {
             return success(true);
           },
           getKeyHash: function(success, error) {
-            return success(ngForgeConfig.facebookKeyHash);
+            return success($forgeFacebookProvider.facebookKeyHash);
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? ngFacebook : forge.facebook);
+        return ngForgeUtils.liftObject($forge.dummy ? ngFacebook : forge.facebook);
       }
-    ]
+    ],
+    facebookKeyHash: 'NteSLOyHHHx12WUnrW0NEbwcY2Y'
   };
 });
 
@@ -197,7 +511,7 @@ angular.module('ngForge').provider('$forgeFile', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', 'forge', 'ngForgeUtils', function($injector, $q, forge, ngForgeUtils) {
+    $get: ['$injector', '$q', '$forge', 'ngForgeUtils', function($injector, $q, $forge, ngForgeUtils) {
         var fileDummy, forgeFile;
         fileDummy = {
           isFile: function(file, success) {
@@ -220,7 +534,7 @@ angular.module('ngForge').provider('$forgeFile', function() {
             return success();
           }
         };
-        forgeFile = forge.dummy ? fileDummy : forge.file;
+        forgeFile = $forge.dummy ? fileDummy : forge.file;
         return ngForgeUtils.liftObject(forgeFile);
       }
     ]
@@ -232,39 +546,39 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
 
   return {
     $get: [
-      '$http', '$injector', '$q', '$rootScope', 'forge', 'logger', 'ngForgeUtils', function($http, $injector, $q, $rootScope, forge, logger, ngForgeUtils) {
-        if (forge.dummy) {
-          return this.ngHttp($http, logger);
+      '$http', '$injector', '$q', '$rootScope', '$forge', '$forgeLogger', 'ngForgeUtils', function($http, $injector, $q, $rootScope, $forge, $forgeLogger, ngForgeUtils) {
+        if ($forge.dummy) {
+          return this.ngHttp($http, $forgeLogger);
         } else {
-          return this.forgeHttp($http, $injector, $q, $rootScope, forge, ngForgeUtils, logger);
+          return this.forgeHttp($http, $injector, $q, $rootScope, $forge, ngForgeUtils, $forgeLogger);
         }
       }
     ],
     httpProvider: $httpProvider,
-    ngHttp: function($http, logger) {
-      logger.debug("using $http for comms");
+    ngHttp: function($http, $forgeLogger) {
+      $forgeLogger.debug("using $http for comms");
       return {
         request: function(config) {
           return $http(config);
         },
         get: function(url, config) {
-          logger.log("ngget:" + url);
+          $forgeLogger.log("ngget:" + url);
           return $http.get(url, config);
         },
         jsonp: function(url, config) {
-          logger.log("ngjsonp:" + url);
+          $forgeLogger.log("ngjsonp:" + url);
           return $http.jsonp(url, config);
         },
         post: function(url, data, config) {
-          logger.log("ngpost:" + url + ":" + data);
+          $forgeLogger.log("ngpost:" + url + ":" + data);
           return $http.post(url, data, config);
         },
         put: function(url, data, config) {
-          logger.log("ngput:" + url + ":" + data);
+          $forgeLogger.log("ngput:" + url + ":" + data);
           return $http.put(url, data, config);
         },
         "delete": function(url, config) {
-          logger.log("ngdelete:" + url);
+          $forgeLogger.log("ngdelete:" + url);
           return $http["delete"](url, config);
         }
       };
@@ -292,9 +606,9 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
 
      $httpProvider.defaults.headers.* configuration
      */
-    forgeHttp: function($http, $injector, $q, $rootScope, forge, ngForgeUtils, logger) {
+    forgeHttp: function($http, $injector, $q, $rootScope, $forge, ngForgeUtils, $forgeLogger) {
       var reversedInterceptors;
-      logger.debug("using forge for comms");
+      $forgeLogger.debug("using forge for comms");
       reversedInterceptors = [];
       angular.forEach(this.httpProvider.interceptors, function(interceptorFactory) {
         return reversedInterceptors.unshift(angular.isString(interceptorFactory) ? $injector.get(interceptorFactory) : $injector.invoke(interceptorFactory));
@@ -323,7 +637,7 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         },
         _getRequest: function(url, config) {
           var cache, cachedResp, deferred, handleResponse, isSuccess, promise, resolvePromise, resolvePromiseWithResult;
-          logger.info("_getRequest(" + url + ", " + (JSON.stringify(config)) + ")");
+          $forgeLogger.info("_getRequest(" + url + ", " + (JSON.stringify(config)) + ")");
           deferred = $q.defer();
           promise = deferred.promise;
           if (ngForgeUtils.isObject(config != null ? config.cache : void 0)) {
@@ -377,10 +691,10 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         },
         _forgeRequester: function(forgeOptions) {
           var deferred;
-          logger.info("_forgeRequester");
+          $forgeLogger.info("_forgeRequester");
           deferred = $q.defer();
           forgeOptions.success = function(data, headers) {
-            logger.debug("ngForge.$forgeHttp.success: " + (JSON.stringify(data)));
+            $forgeLogger.debug("ngForge.$forgeHttp.success: " + (JSON.stringify(data)));
             deferred.resolve({
               status: 200,
               data: data,
@@ -393,8 +707,8 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
           };
           forgeOptions.error = function(error) {
             var data, status;
-            logger.debug("error " + (JSON.stringify(error)));
-            logger.error(error.statusCode + " " + error.content);
+            $forgeLogger.debug("error " + (JSON.stringify(error)));
+            $forgeLogger.error(error.statusCode + " " + error.content);
             status = 400;
             try {
               status = parseInt(error.statusCode);
@@ -450,7 +764,7 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         },
         _doRequest: function(config) {
           var chain, promise, rejectFn, thenFn;
-          logger.log("forge" + (config.method.toLowerCase()) + ":" + config.url + ":" + ((config != null ? config.data : void 0) ? JSON.stringify(config.data) : void 0));
+          $forgeLogger.log("$forge" + (config.method.toLowerCase()) + ":" + config.url + ":" + ((config != null ? config.data : void 0) ? JSON.stringify(config.data) : void 0));
           promise = $q.when(forgeOptions);
           chain = [this._forgeRequester, void 0];
           angular.forEach(reversedInterceptors, function(interceptor) {
@@ -498,33 +812,33 @@ angular.module('ngForge').provider('$forgeIonicKeyboard', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+    $get: ['$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var ionicKeyboardDummy;
         ionicKeyboardDummy = {
           disableScroll: function(val, success) {
-            logger.info("$forgeIonicKeyboard.disableScroll(" + val + ")");
+            $forgeLogger.info("$forgeIonicKeyboard.disableScroll(" + val + ")");
             return typeof success === "function" ? success() : void 0;
           },
           hideKeyboardAccessoryBar: function(val, success) {
-            logger.info("$forgeIonicKeyboard.hideKeyboardAccessoryBar(" + val + ")");
+            $forgeLogger.info("$forgeIonicKeyboard.hideKeyboardAccessoryBar(" + val + ")");
             return typeof success === "function" ? success() : void 0;
           },
           isKeyboardVisible: function(success) {
-            logger.info('$forgeIonicKeyboard.isKeyboardVisible');
+            $forgeLogger.info('$forgeIonicKeyboard.isKeyboardVisible');
             return typeof success === "function" ? success() : void 0;
           },
           close: function(success) {
-            logger.info('$forgeIonicKeyboard.close');
+            $forgeLogger.info('$forgeIonicKeyboard.close');
             return typeof success === "function" ? success() : void 0;
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? ionicKeyboardDummy : forge.ionic_keyboard);
+        return ngForgeUtils.liftObject($forge.dummy ? ionicKeyboardDummy : forge.ionic_keyboard);
       }
     ]
   };
 });
 
-angular.module('ngForge').factory('logger', ['ngForgeUtils', function(ngForgeUtils) {
+angular.module('ngForge').factory('$forgeLogger', ['ngForgeUtils', function(ngForgeUtils) {
   var error, group, groupEnd, groups, log, logger, message;
   if (!(window.forge && window.forge.is && window.forge.is.mobile())) {
     return console;
@@ -598,7 +912,7 @@ angular.module('ngForge').provider('$forgeMedia', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+    $get: ['$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var mediaDummy;
         mediaDummy = {
           playerDummy: {
@@ -607,11 +921,11 @@ angular.module('ngForge').provider('$forgeMedia', function() {
             }
           },
           createAudioPlayer: function(file, success, error) {
-            logger.info("create dummy player " + file);
+            $forgeLogger.info("create dummy player " + file);
             return typeof success === "function" ? success(this.playerDummy) : void 0;
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? mediaDummy : forge.media);
+        return ngForgeUtils.liftObject($forge.dummy ? mediaDummy : forge.media);
       }
     ]
   };
@@ -621,12 +935,12 @@ angular.module('ngForge').provider('$forgeParse', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+    $get: ['$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var parseDummy;
         parseDummy = {
           dummyChannels: [''],
           installationInfo: function(success) {
-            logger.info('parseDummy info');
+            $forgeLogger.info('parseDummy info');
             return success({
               id: -696969
             });
@@ -636,14 +950,14 @@ angular.module('ngForge').provider('$forgeParse', function() {
           },
           push: {
             subscribe: function(channel, s, e) {
-              logger.info("subscribing to " + channel);
+              $forgeLogger.info("subscribing to " + channel);
               if (!ngForgeUtils.includes(this.dummyChannels, channel)) {
                 this.dummyChannels.push(channel);
               }
               return typeof s === "function" ? s() : void 0;
             },
             unsubscribe: function(channel, s, e) {
-              logger.info("unsubscribing from " + channel);
+              $forgeLogger.info("unsubscribing from " + channel);
               this.dummyChannels = ngForgeUtils.without(this.dummyChannels, channel);
               return typeof s === "function" ? s() : void 0;
             },
@@ -652,7 +966,7 @@ angular.module('ngForge').provider('$forgeParse', function() {
             }
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? parseDummy : forge.parse);
+        return ngForgeUtils.liftObject($forge.dummy ? parseDummy : forge.parse);
       }
     ]
   };
@@ -662,7 +976,7 @@ angular.module('ngForge').provider('$forgePlatform', function() {
   'use strinct';
   return {
     $get: [
-      '$injector', '$q', 'forge', 'ngForgeUtils', function($injector, $q, forge, ngForgeUtils) {
+      '$injector', '$q', '$forge', 'ngForgeUtils', function($injector, $q, $forge, ngForgeUtils) {
         var forgePlatform, platformDummy;
         platformDummy = {
           getModel: function(success, error) {
@@ -678,7 +992,7 @@ angular.module('ngForge').provider('$forgePlatform', function() {
             return success('X');
           }
         };
-        forgePlatform = forge.dummy ? platformDummy : forge.platform;
+        forgePlatform = $forge.dummy ? platformDummy : forge.platform;
         return ngForgeUtils.liftObject(forgePlatform);
       }
     ]
@@ -689,14 +1003,15 @@ angular.module('ngForge').provider('$forgePrefs', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', '$window', 'forge', 'logger', 'ngForgeConfig', 'ngForgeUtils', function($injector, $q, $window, forge, logger, ngForgeConfig, ngForgeUtils) {
-        var getPrefsObj, prefsDummy, setPrefsObj;
-        setPrefsObj = function(prefs) {
-          return $window.localStorage.setItem(ngForgeConfig.prefsKey, JSON.stringify(prefs));
+    $get: ['$injector', '$q', '$window', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $window, $forge, $forgeLogger, ngForgeUtils) {
+        var $forgePrefsProvider = this;
+
+        var setPrefsObj = function(prefs) {
+          return $window.localStorage.setItem($forgePrefsProvider.prefsKey, JSON.stringify(prefs));
         };
-        getPrefsObj = function() {
+        var getPrefsObj = function() {
           var prefs;
-          prefs = $window.localStorage.getItem(ngForgeConfig.prefsKey);
+          prefs = $window.localStorage.getItem($forgePrefsProvider.prefsKey);
           if (prefs) {
             prefs = JSON.parse(prefs);
           }
@@ -706,14 +1021,14 @@ angular.module('ngForge').provider('$forgePrefs', function() {
           }
           return prefs;
         };
-        prefsDummy = {
+        var prefsDummy = {
           get: function(key, success, error) {
             var e;
             try {
               return typeof success === "function" ? success(getPrefsObj()[key]) : void 0;
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               if (typeof error === "function") {
                 error(e);
               }
@@ -728,7 +1043,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return typeof success === "function" ? success() : void 0;
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               return typeof error === "function" ? error(e) : void 0;
             }
           },
@@ -741,7 +1056,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return typeof success === "function" ? success() : void 0;
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               return typeof error === "function" ? error(e) : void 0;
             }
           },
@@ -752,7 +1067,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return typeof success === "function" ? success() : void 0;
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               return typeof error === "function" ? error(e) : void 0;
             }
           },
@@ -763,14 +1078,15 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return success(Object.keys(prefs));
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               return error(e);
             }
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? prefsDummy : forge.prefs);
+        return ngForgeUtils.liftObject($forge.dummy ? prefsDummy : forge.prefs);
       }
-    ]
+    ],
+    prefsKey: 'ngStorage-prefs'
   };
 });
 
@@ -779,23 +1095,23 @@ angular.module('ngForge').provider('$forgeSegmentio', function() {
 
   return {
     $get: [
-      '$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+      '$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var forgeSegmentioDummy;
         forgeSegmentioDummy = {
           identify: function(userId, traits, success, error) {
-            logger.debug("identify");
+            $forgeLogger.debug("identify");
             return typeof success === "function" ? success() : void 0;
           },
           track: function(event, properties, success, error) {
-            logger.debug("track");
+            $forgeLogger.debug("track");
             return typeof success === "function" ? success() : void 0;
           },
           screen: function(view, properties, success, error) {
-            logger.debug("screen");
+            $forgeLogger.debug("screen");
             return typeof success === "function" ? success() : void 0;
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? forgeSegmentioDummy : forge.segmentio);
+        return ngForgeUtils.liftObject($forge.dummy ? forgeSegmentioDummy : forge.segmentio);
       }
     ]
   };
@@ -806,331 +1122,20 @@ angular.module('ngForge').provider('$forgeSms', function() {
 
   return {
     $get: [
-      '$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+      '$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var smsDummy;
         smsDummy = {
           send: function(params, success, error) {
-            logger.debug("$forgeSms.send " + params.body + " to " + (JSON.stringify(params.to)));
+            $forgeLogger.debug("$forgeSms.send " + params.body + " to " + (JSON.stringify(params.to)));
             return typeof success === "function" ? success() : void 0;
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? smsDummy : forge.sms);
+        return ngForgeUtils.liftObject($forge.dummy ? smsDummy : forge.sms);
       }
     ]
   };
 });
 
-angular.module('ngForge').constant('ngForgeConfig', {
-  testConnectionUrl: 'ping',
-  facebookKeyHash: '5453425284625867',
-  prefsKey: 'ngStorage-prefs',
-  sampleContacts: [
-    {
-      "id": "14894",
-      "displayName": "Gal Gadot",
-      "name": {
-        "formatted": "Gal Gadot",
-        "familyName": "Gadot",
-        "givenName": "Gal",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "+447574712444",
-          "type": "mobile",
-          "pref": false
-        }
-      ],
-      "photos": [
-        {
-          "value": "data:image/jpg;base64,ABCDEF1234",
-          "type": null,
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "148900",
-      "displayName": "Tom",
-      "name": {
-        "formatted": "Tom",
-        "familyName": "",
-        "givenName": "Tom",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "+44 751-5097756+13",
-          "type": "mobile",
-          "pref": false
-        }
-      ],
-      "photos": [
-        {
-          "value": "data:image/jpg;base64,ABCDEF1234",
-          "type": null,
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "14894",
-      "displayName": "Brigid",
-      "name": {
-        "formatted": "Brigid",
-        "familyName": "",
-        "givenName": "Brigid",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "+33 7817471244",
-          "type": "mobile",
-          "pref": false
-        }
-      ],
-      "photos": [
-        {
-          "value": "data:image/jpg;base64,ABCDEF1234",
-          "type": null,
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "14895",
-      "displayName": "Eddie Redmayne",
-      "name": {
-        "formatted": "Eddie Redmayne",
-        "familyName": "Fenech",
-        "givenName": "Eddie",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "+447432111412",
-          "type": "mobile",
-          "pref": false
-        }
-      ],
-      "photos": [
-        {
-          "value": "data:image/jpg;base64,ABCDEF1234",
-          "type": null,
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "122",
-      "displayName": "Arow",
-      "name": {
-        "formatted": "Arow",
-        "familyName": "Arow"
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "+972 963587331",
-          "type": "mobile",
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "299",
-      "displayName": "Bad Phone",
-      "name": {
-        "formatted": "Bad Phone",
-        "familyName": "BPhone"
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "+97288898",
-          "type": "mobile",
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "1",
-      "displayName": "Girt Wenders",
-      "name": {
-        "formatted": "Girt Wenders",
-        "familyName": "Wenders",
-        "givenName": "Girt",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "+972 521123241",
-          "type": "mobile",
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "690",
-      "displayName": "Dodgy Bro",
-      "name": {
-        "formatted": "Dodgy Bro",
-        "familyName": "Bro",
-        "givenName": "Dodgy",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "Doge",
-      "phoneNumbers": [
-        {
-          "value": "+44 7967929796",
-          "type": "mobile",
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "691",
-      "displayName": "Toby Bro",
-      "name": {
-        "formatted": "Toby Bro",
-        "familyName": "Bro",
-        "givenName": "Toby",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "Tobe",
-      "phoneNumbers": [
-        {
-          "value": "+44-783-241324",
-          "type": "work",
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "2",
-      "displayName": "Mr Bodie Carstairs",
-      "name": {
-        "formatted": "Bodie Carstairs",
-        "familyName": "Carstairs",
-        "givenName": "Bodie",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "Bo",
-      "phoneNumbers": [
-        {
-          "value": "+447321123324",
-          "type": "mobile",
-          "pref": false
-        }
-      ],
-      "photos": [
-        {
-          "value": "data:image/jpg;base64,ABCDEF1234",
-          "type": null,
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "3",
-      "displayName": "Lucy Cleaner",
-      "name": {
-        "formatted": "Lucy Cleaner",
-        "familyName": "Cleaner",
-        "givenName": "Lucy",
-        "middleName": "middle",
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "+447321132131",
-          "type": "mobile",
-          "pref": false
-        }
-      ],
-      "photos": [
-        {
-          "value": "data:image/jpg;base64,ABCDEF1234",
-          "type": null,
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "33",
-      "displayName": "Ches",
-      "name": {
-        "formatted": "Ches",
-        "familyName": "",
-        "givenName": "Ches",
-        "middleName": "",
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "",
-      "phoneNumbers": [
-        {
-          "value": "0543742342",
-          "type": "mobile",
-          "pref": false
-        }
-      ],
-      "photos": [
-        {
-          "value": "data:image/jpg;base64,ABCDEF1234",
-          "type": null,
-          "pref": false
-        }
-      ]
-    }, {
-      "id": "4",
-      "displayName": "Sarah",
-      "name": {
-        "formatted": "Sarah",
-        "familyName": "",
-        "givenName": "Sarah",
-        "middleName": null,
-        "honorificPrefix": "",
-        "honorificSuffic": null
-      },
-      "nickname": "tush",
-      "phoneNumbers": [
-        {
-          "value": "+972547434302",
-          "type": "work",
-          "pref": false
-        }, {
-          "value": "+335723131231",
-          "type": "home",
-          "pref": false
-        }, {
-          "value": "+447312311232",
-          "type": "mobile",
-          "pref": false
-        }
-      ],
-      "photos": [
-        {
-          "value": "data:image/jpg;base64,ABCDEF1234",
-          "type": null,
-          "pref": false
-        }
-      ]
-    }
-  ]
-});
 angular.module('ngForge').factory('ngForgeUtils', ['$q', function($q) {
     'use strict';
     var slice = [].slice,
