@@ -2,7 +2,7 @@ angular.module('ngForge').provider('$forgeMedia', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+    $get: ['$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var mediaDummy;
         mediaDummy = {
           playerDummy: {
@@ -11,11 +11,11 @@ angular.module('ngForge').provider('$forgeMedia', function() {
             }
           },
           createAudioPlayer: function(file, success, error) {
-            logger.info("create dummy player " + file);
+            $forgeLogger.info("create dummy player " + file);
             return typeof success === "function" ? success(this.playerDummy) : void 0;
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? mediaDummy : forge.media);
+        return ngForgeUtils.liftObject($forge.dummy ? mediaDummy : forge.media);
       }
     ]
   };

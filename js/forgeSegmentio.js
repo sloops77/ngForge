@@ -3,23 +3,23 @@ angular.module('ngForge').provider('$forgeSegmentio', function() {
 
   return {
     $get: [
-      '$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+      '$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var forgeSegmentioDummy;
         forgeSegmentioDummy = {
           identify: function(userId, traits, success, error) {
-            logger.debug("identify");
+            $forgeLogger.debug("identify");
             return typeof success === "function" ? success() : void 0;
           },
           track: function(event, properties, success, error) {
-            logger.debug("track");
+            $forgeLogger.debug("track");
             return typeof success === "function" ? success() : void 0;
           },
           screen: function(view, properties, success, error) {
-            logger.debug("screen");
+            $forgeLogger.debug("screen");
             return typeof success === "function" ? success() : void 0;
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? forgeSegmentioDummy : forge.segmentio);
+        return ngForgeUtils.liftObject($forge.dummy ? forgeSegmentioDummy : forge.segmentio);
       }
     ]
   };

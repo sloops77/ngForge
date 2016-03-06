@@ -2,12 +2,12 @@ angular.module('ngForge').provider('$forgeParse', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+    $get: ['$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var parseDummy;
         parseDummy = {
           dummyChannels: [''],
           installationInfo: function(success) {
-            logger.info('parseDummy info');
+            $forgeLogger.info('parseDummy info');
             return success({
               id: -696969
             });
@@ -17,14 +17,14 @@ angular.module('ngForge').provider('$forgeParse', function() {
           },
           push: {
             subscribe: function(channel, s, e) {
-              logger.info("subscribing to " + channel);
+              $forgeLogger.info("subscribing to " + channel);
               if (!ngForgeUtils.includes(this.dummyChannels, channel)) {
                 this.dummyChannels.push(channel);
               }
               return typeof s === "function" ? s() : void 0;
             },
             unsubscribe: function(channel, s, e) {
-              logger.info("unsubscribing from " + channel);
+              $forgeLogger.info("unsubscribing from " + channel);
               this.dummyChannels = ngForgeUtils.without(this.dummyChannels, channel);
               return typeof s === "function" ? s() : void 0;
             },
@@ -33,7 +33,7 @@ angular.module('ngForge').provider('$forgeParse', function() {
             }
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? parseDummy : forge.parse);
+        return ngForgeUtils.liftObject($forge.dummy ? parseDummy : forge.parse);
       }
     ]
   };

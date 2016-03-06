@@ -2,7 +2,7 @@ angular.module('ngForge').provider('$forgeFile', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', 'forge', 'ngForgeUtils', function($injector, $q, forge, ngForgeUtils) {
+    $get: ['$injector', '$q', '$forge', 'ngForgeUtils', function($injector, $q, $forge, ngForgeUtils) {
         var fileDummy, forgeFile;
         fileDummy = {
           isFile: function(file, success) {
@@ -25,7 +25,7 @@ angular.module('ngForge').provider('$forgeFile', function() {
             return success();
           }
         };
-        forgeFile = forge.dummy ? fileDummy : forge.file;
+        forgeFile = $forge.dummy ? fileDummy : forge.file;
         return ngForgeUtils.liftObject(forgeFile);
       }
     ]

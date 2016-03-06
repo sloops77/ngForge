@@ -3,12 +3,12 @@ angular.module('ngForge').provider('$forgeContact', function() {
 
   return {
     $get: [
-      '$injector', '$q', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, forge, logger, ngForgeUtils) {
+      '$injector', '$q', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $forge, $forgeLogger, ngForgeUtils) {
         var $forgeContactProvider = this;
 
         var contactDummy = {
           select: function(success, error) {
-            logger.debug("select");
+            $forgeLogger.debug("select");
             return typeof success === "function" ? success() : void 0;
           },
           selectAll: function(fields, success, error) {
@@ -17,19 +17,19 @@ angular.module('ngForge').provider('$forgeContact', function() {
               success = fields;
               error = success;
             }
-            logger.debug("selectAll");
+            $forgeLogger.debug("selectAll");
             return typeof success === "function" ? success($forgeContactProvider.sampleContacts.map(function(c) {
               return ngForgeUtils.pick(c, fields);
             })) : void 0;
           },
           selectById: function(id, success, error) {
-            logger.debug("selectById");
+            $forgeLogger.debug("selectById");
             return typeof success === "function" ? success(ngForgeUtils.find($forgeContactProvider.sampleContacts, function(c) {
               return c.id === id;
             })) : void 0;
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? contactDummy : forge.contact);
+        return ngForgeUtils.liftObject($forge.dummy ? contactDummy : forge.contact);
       }
     ],
     sampleContacts: [

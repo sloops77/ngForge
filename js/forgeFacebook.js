@@ -2,7 +2,7 @@ angular.module('ngForge').provider('$forgeFacebook', function() {
   'use strict';
 
   return {
-    $get: ['$injector', 'forge', 'logger', 'ngForgeUtils', function($injector, forge, logger, ngForgeUtils) {
+    $get: ['$injector', '$forge', 'ngForgeUtils', function($injector, $forge, ngForgeUtils) {
       var $forgeFacebookProvider = this;
 
       var ngFacebook = {
@@ -38,7 +38,7 @@ angular.module('ngForge').provider('$forgeFacebook', function() {
             return success($forgeFacebookProvider.facebookKeyHash);
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? ngFacebook : forge.facebook);
+        return ngForgeUtils.liftObject($forge.dummy ? ngFacebook : forge.facebook);
       }
     ],
     facebookKeyHash: 'NteSLOyHHHx12WUnrW0NEbwcY2Y'

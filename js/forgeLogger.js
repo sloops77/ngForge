@@ -1,4 +1,4 @@
-angular.module('ngForge').factory('logger', ['ngForgeUtils', function(ngForgeUtils) {
+angular.module('ngForge').factory('$forgeLogger', ['ngForgeUtils', function(ngForgeUtils) {
   var error, group, groupEnd, groups, log, logger, message;
   if (!(window.forge && window.forge.is && window.forge.is.mobile())) {
     return console;

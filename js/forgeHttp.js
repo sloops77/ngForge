@@ -3,39 +3,39 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
 
   return {
     $get: [
-      '$http', '$injector', '$q', '$rootScope', 'forge', 'logger', 'ngForgeUtils', function($http, $injector, $q, $rootScope, forge, logger, ngForgeUtils) {
-        if (forge.dummy) {
-          return this.ngHttp($http, logger);
+      '$http', '$injector', '$q', '$rootScope', '$forge', '$forgeLogger', 'ngForgeUtils', function($http, $injector, $q, $rootScope, $forge, $forgeLogger, ngForgeUtils) {
+        if ($forge.dummy) {
+          return this.ngHttp($http, $forgeLogger);
         } else {
-          return this.forgeHttp($http, $injector, $q, $rootScope, forge, ngForgeUtils, logger);
+          return this.forgeHttp($http, $injector, $q, $rootScope, $forge, ngForgeUtils, $forgeLogger);
         }
       }
     ],
     httpProvider: $httpProvider,
-    ngHttp: function($http, logger) {
-      logger.debug("using $http for comms");
+    ngHttp: function($http, $forgeLogger) {
+      $forgeLogger.debug("using $http for comms");
       return {
         request: function(config) {
           return $http(config);
         },
         get: function(url, config) {
-          logger.log("ngget:" + url);
+          $forgeLogger.log("ngget:" + url);
           return $http.get(url, config);
         },
         jsonp: function(url, config) {
-          logger.log("ngjsonp:" + url);
+          $forgeLogger.log("ngjsonp:" + url);
           return $http.jsonp(url, config);
         },
         post: function(url, data, config) {
-          logger.log("ngpost:" + url + ":" + data);
+          $forgeLogger.log("ngpost:" + url + ":" + data);
           return $http.post(url, data, config);
         },
         put: function(url, data, config) {
-          logger.log("ngput:" + url + ":" + data);
+          $forgeLogger.log("ngput:" + url + ":" + data);
           return $http.put(url, data, config);
         },
         "delete": function(url, config) {
-          logger.log("ngdelete:" + url);
+          $forgeLogger.log("ngdelete:" + url);
           return $http["delete"](url, config);
         }
       };
@@ -63,9 +63,9 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
 
      $httpProvider.defaults.headers.* configuration
      */
-    forgeHttp: function($http, $injector, $q, $rootScope, forge, ngForgeUtils, logger) {
+    forgeHttp: function($http, $injector, $q, $rootScope, $forge, ngForgeUtils, $forgeLogger) {
       var reversedInterceptors;
-      logger.debug("using forge for comms");
+      $forgeLogger.debug("using forge for comms");
       reversedInterceptors = [];
       angular.forEach(this.httpProvider.interceptors, function(interceptorFactory) {
         return reversedInterceptors.unshift(angular.isString(interceptorFactory) ? $injector.get(interceptorFactory) : $injector.invoke(interceptorFactory));
@@ -94,7 +94,7 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         },
         _getRequest: function(url, config) {
           var cache, cachedResp, deferred, handleResponse, isSuccess, promise, resolvePromise, resolvePromiseWithResult;
-          logger.info("_getRequest(" + url + ", " + (JSON.stringify(config)) + ")");
+          $forgeLogger.info("_getRequest(" + url + ", " + (JSON.stringify(config)) + ")");
           deferred = $q.defer();
           promise = deferred.promise;
           if (ngForgeUtils.isObject(config != null ? config.cache : void 0)) {
@@ -148,10 +148,10 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         },
         _forgeRequester: function(forgeOptions) {
           var deferred;
-          logger.info("_forgeRequester");
+          $forgeLogger.info("_forgeRequester");
           deferred = $q.defer();
           forgeOptions.success = function(data, headers) {
-            logger.debug("ngForge.$forgeHttp.success: " + (JSON.stringify(data)));
+            $forgeLogger.debug("ngForge.$forgeHttp.success: " + (JSON.stringify(data)));
             deferred.resolve({
               status: 200,
               data: data,
@@ -164,8 +164,8 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
           };
           forgeOptions.error = function(error) {
             var data, status;
-            logger.debug("error " + (JSON.stringify(error)));
-            logger.error(error.statusCode + " " + error.content);
+            $forgeLogger.debug("error " + (JSON.stringify(error)));
+            $forgeLogger.error(error.statusCode + " " + error.content);
             status = 400;
             try {
               status = parseInt(error.statusCode);
@@ -221,7 +221,7 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         },
         _doRequest: function(config) {
           var chain, promise, rejectFn, thenFn;
-          logger.log("forge" + (config.method.toLowerCase()) + ":" + config.url + ":" + ((config != null ? config.data : void 0) ? JSON.stringify(config.data) : void 0));
+          $forgeLogger.log("$forge" + (config.method.toLowerCase()) + ":" + config.url + ":" + ((config != null ? config.data : void 0) ? JSON.stringify(config.data) : void 0));
           promise = $q.when(forgeOptions);
           chain = [this._forgeRequester, void 0];
           angular.forEach(reversedInterceptors, function(interceptor) {

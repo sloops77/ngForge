@@ -2,7 +2,7 @@ angular.module('ngForge').provider('$forgePlatform', function() {
   'use strinct';
   return {
     $get: [
-      '$injector', '$q', 'forge', 'ngForgeUtils', function($injector, $q, forge, ngForgeUtils) {
+      '$injector', '$q', '$forge', 'ngForgeUtils', function($injector, $q, $forge, ngForgeUtils) {
         var forgePlatform, platformDummy;
         platformDummy = {
           getModel: function(success, error) {
@@ -18,7 +18,7 @@ angular.module('ngForge').provider('$forgePlatform', function() {
             return success('X');
           }
         };
-        forgePlatform = forge.dummy ? platformDummy : forge.platform;
+        forgePlatform = $forge.dummy ? platformDummy : forge.platform;
         return ngForgeUtils.liftObject(forgePlatform);
       }
     ]

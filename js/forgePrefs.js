@@ -2,7 +2,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', '$window', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, $window, forge, logger, ngForgeUtils) {
+    $get: ['$injector', '$q', '$window', '$forge', '$forgeLogger', 'ngForgeUtils', function($injector, $q, $window, $forge, $forgeLogger, ngForgeUtils) {
         var $forgePrefsProvider = this;
 
         var setPrefsObj = function(prefs) {
@@ -27,7 +27,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return typeof success === "function" ? success(getPrefsObj()[key]) : void 0;
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               if (typeof error === "function") {
                 error(e);
               }
@@ -42,7 +42,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return typeof success === "function" ? success() : void 0;
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               return typeof error === "function" ? error(e) : void 0;
             }
           },
@@ -55,7 +55,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return typeof success === "function" ? success() : void 0;
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               return typeof error === "function" ? error(e) : void 0;
             }
           },
@@ -66,7 +66,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return typeof success === "function" ? success() : void 0;
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               return typeof error === "function" ? error(e) : void 0;
             }
           },
@@ -77,12 +77,12 @@ angular.module('ngForge').provider('$forgePrefs', function() {
               return success(Object.keys(prefs));
             } catch (_error) {
               e = _error;
-              logger.error(e.message);
+              $forgeLogger.error(e.message);
               return error(e);
             }
           }
         };
-        return ngForgeUtils.liftObject(forge.dummy ? prefsDummy : forge.prefs);
+        return ngForgeUtils.liftObject($forge.dummy ? prefsDummy : forge.prefs);
       }
     ],
     prefsKey: 'ngStorage-prefs'

@@ -1,9 +1,9 @@
 angular.module('ngForge', []);
 
-angular.module('ngForge').provider('forge', function() {
+angular.module('ngForge').provider('$forge', function() {
   return {
     testConnectionUrl: 'ping',
-    $get              : ['$http', '$interval', '$window', 'logger', function($http, $interval, $window, logger) {
+    $get              : ['$http', '$interval', '$window', '$forgeLogger', function($http, $interval, $window, $forgeLogger) {
       var forgeProvider = this;
       var dummyForge = {
         dummy         : true,
@@ -88,10 +88,10 @@ angular.module('ngForge').provider('forge', function() {
         }
       };
       if ($window.forge) {
-        logger.info("ngForge.$forge: using trigger.io");
+        $forgeLogger.info("ngForge.$forge: using trigger.io");
         return $window.forge;
       } else {
-        logger.info("ngForge.$forge: using dummy");
+        $forgeLogger.info("ngForge.$forge: using dummy");
         dummyForge.testConnection();
         $interval(function () {
           return dummyForge.testConnection();
