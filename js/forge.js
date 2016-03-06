@@ -20,6 +20,14 @@ angular.module('ngForge').provider('$forge', function() {
           ios       : function () {
             return false;
           },
+          orientation: {
+            portrait: function() {
+              return true;
+            },
+            landscape: function() {
+              return false;
+            }
+          },
           connection: {
             _connected: false,
             connected : function () {
@@ -31,6 +39,31 @@ angular.module('ngForge').provider('$forge', function() {
           }
         },
         event         : {
+          menuPressed          : {
+            addListener   : function (callback, error) {
+              return console.log("menu pressed event registration");
+            }
+          },
+          backPressed          : {
+            addListener   : function (callback, error) {
+              return console.log("back pressed event registration");
+            },
+            preventDefault: function (callback, error) {
+              return console.log('default back handling disabled');
+            }
+          },
+          orientationChange : {
+            addListener   : function (callback, error) {
+              return console.log("orientation change event registration");
+            }
+          },
+          connectionStateChange: {
+            listeners  : [],
+            addListener: function (callback, error) {
+              this.listeners.push(callback);
+              return console.log("connectionStateChange event registration");
+            }
+          },
           messagePushed        : {
             addListener: function (callback, error) {
               return console.log("messagePushed event registration");
@@ -46,20 +79,24 @@ angular.module('ngForge').provider('$forge', function() {
               return console.log("appResumed event registration");
             }
           },
-          backPressed          : {
-            addListener   : function (callback, error) {
-              return console.log("back pressed");
-            },
-            preventDefault: function (callback, error) {
-              return console.log('default back handling disabled');
-            }
-          },
-          connectionStateChange: {
-            listeners  : [],
+          statusBarTapped           : {
             addListener: function (callback, error) {
-              this.listeners.push(callback);
-              return console.log("connectionStateChange");
+              return console.log("statusBarTapped event registration");
             }
+          }
+        },
+        tools: {
+          UUID: function() {
+            function s4() {
+              return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+            }
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+              s4() + '-' + s4() + s4() + s4();
+          },
+          getURL: function(name, success, error) {
+            success(name);
           }
         },
         testConnection: function () {

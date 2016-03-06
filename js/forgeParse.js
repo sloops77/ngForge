@@ -6,6 +6,14 @@ angular.module('ngForge').provider('$forgeParse', function() {
         var parseDummy;
         parseDummy = {
           dummyChannels: [''],
+          badgeNumber: 0,
+          getBadgeNumber: function(success) {
+            success(this.badgeNumber);
+          },
+          setBadgeNumber: function(number, success) {
+            this.badgeNumber = number;
+            success();
+          },
           installationInfo: function(success) {
             $forgeLogger.info('parseDummy info');
             return success({
