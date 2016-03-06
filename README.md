@@ -2,9 +2,10 @@
 Angular wrappers for Trigger.io (forge) modules: 
 * Uses Promises NOT callbacks
 * All Trigger.io module methods are available (but only a portion are mocked)
-* Caching & File modules use localStorage instead
-* Request module adapter ($forgeHttp) implements angular's $http api equivalence (not jquery)
-* Contact & Facebook modules return configurable mock data in browser mode
+* The Request module adapter ($forgeHttp) exports angular's $http api (not trigger.io's jquery)
+* In Web Mock mode: 
+ * Caching & File modules use localStorage instead
+ * Contact & Facebook modules return configurable mock data in browser mode
 
 Provides a set of angular adapters to communicate to trigger.io.
 
