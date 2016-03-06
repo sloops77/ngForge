@@ -2,14 +2,15 @@ angular.module('ngForge').provider('$forgePrefs', function() {
   'use strict';
 
   return {
-    $get: ['$injector', '$q', '$window', 'forge', 'logger', 'ngForgeConfig', 'ngForgeUtils', function($injector, $q, $window, forge, logger, ngForgeConfig, ngForgeUtils) {
-        var getPrefsObj, prefsDummy, setPrefsObj;
-        setPrefsObj = function(prefs) {
-          return $window.localStorage.setItem(ngForgeConfig.prefsKey, JSON.stringify(prefs));
+    $get: ['$injector', '$q', '$window', 'forge', 'logger', 'ngForgeUtils', function($injector, $q, $window, forge, logger, ngForgeUtils) {
+        var $forgePrefsProvider = this;
+
+        var setPrefsObj = function(prefs) {
+          return $window.localStorage.setItem($forgePrefsProvider.prefsKey, JSON.stringify(prefs));
         };
-        getPrefsObj = function() {
+        var getPrefsObj = function() {
           var prefs;
-          prefs = $window.localStorage.getItem(ngForgeConfig.prefsKey);
+          prefs = $window.localStorage.getItem($forgePrefsProvider.prefsKey);
           if (prefs) {
             prefs = JSON.parse(prefs);
           }
@@ -19,7 +20,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
           }
           return prefs;
         };
-        prefsDummy = {
+        var prefsDummy = {
           get: function(key, success, error) {
             var e;
             try {
@@ -83,6 +84,7 @@ angular.module('ngForge').provider('$forgePrefs', function() {
         };
         return ngForgeUtils.liftObject(forge.dummy ? prefsDummy : forge.prefs);
       }
-    ]
+    ],
+    prefsKey: 'ngStorage-prefs'
   };
 });

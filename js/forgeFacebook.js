@@ -2,9 +2,10 @@ angular.module('ngForge').provider('$forgeFacebook', function() {
   'use strict';
 
   return {
-    $get: ['$injector', 'forge', 'logger', 'ngForgeConfig', 'ngForgeUtils', function($injector, forge, logger, ngForgeConfig, ngForgeUtils) {
-        var ngFacebook;
-        ngFacebook = {
+    $get: ['$injector', 'forge', 'logger', 'ngForgeUtils', function($injector, forge, logger, ngForgeUtils) {
+      var $forgeFacebookProvider = this;
+
+      var ngFacebook = {
           authorize: function(permissions, audience, success, error) {
             return success({
               access_token: 'dfs',
@@ -34,11 +35,12 @@ angular.module('ngForge').provider('$forgeFacebook', function() {
             return success(true);
           },
           getKeyHash: function(success, error) {
-            return success(ngForgeConfig.facebookKeyHash);
+            return success($forgeFacebookProvider.facebookKeyHash);
           }
         };
         return ngForgeUtils.liftObject(forge.dummy ? ngFacebook : forge.facebook);
       }
-    ]
+    ],
+    facebookKeyHash: 'NteSLOyHHHx12WUnrW0NEbwcY2Y'
   };
 });
