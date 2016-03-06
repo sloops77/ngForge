@@ -45,7 +45,7 @@ Currently the following adapters are provided:
 |------------|----------|--------------
 | forge (Core Services)   | $forge | testConnectionUrl           
 | forge.contact      | $forgeContact  | sampleContacts
-| forge.facebook    | $forgeFacebook  | keyHash           
+| forge.facebook    | $forgeFacebook  | sampleKeyHash           
 | forge.file    | $forgeFile      |           
 | forge.request  | $forgeHttp   |           
 | forge.logger   | $forgeLogger      | 
