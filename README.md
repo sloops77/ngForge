@@ -52,7 +52,7 @@ Currently the following adapters are provided:
 | forge.media   | $forgeMedia      |            
 | forge.parse   | $forgeParse      |            
 | forge.platform    | $forgePlatform      | 
-| forge.prefs  | $forgePrefs   |           
+| forge.prefs  | $forgePrefs   | prefsKey           
 | forge.segmentio   | $forgeSegmentio      | 
 | forge.sms   | $forgeSms  |      
 | forge.ionic_keyboard** | $forgeIonicKeyboard |
