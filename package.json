@@ -1,7 +1,7 @@
 {
   "name": "ngforge",
   "private": false,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "repository": {
     "url": "git://github.com/sloops77/ngforge.git"
   },
