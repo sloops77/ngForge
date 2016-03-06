@@ -1,9 +1,5 @@
 angular.module('ngForge', []);
 
-angular.module('ngForge').constant('forgeConfig', {
-  testConnectionUrl: 'ping'
-});
-
 angular.module('ngForge').factory('forge', ['$http', '$interval', '$window', 'logger', 'ngForgeConfig', function($http, $interval, $window, logger, ngForgeConfig) {
   var dummyForge = {
     dummy: true,

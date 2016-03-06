@@ -2,25 +2,21 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
   'use strict';
 
   return {
-    interceptors: [],
-    $get: ['$http', '$injector', '$q', '$rootScope', '$upload', 'forge', 'logger', 'ngForgeUtils', function($http, $injector, $q, $rootScope, $upload, forge, logger, ngForgeUtils) {
+    $get: [
+      '$http', '$injector', '$q', '$rootScope', 'forge', 'logger', 'ngForgeUtils', function($http, $injector, $q, $rootScope, forge, logger, ngForgeUtils) {
         if (forge.dummy) {
-          return this.ngHttp($http, $upload, logger);
+          return this.ngHttp($http, logger);
         } else {
-          return this.forgeHttp($http, $injector, $q, $rootScope, $upload, forge, ngForgeUtils, logger);
+          return this.forgeHttp($http, $injector, $q, $rootScope, forge, ngForgeUtils, logger);
         }
       }
     ],
-    ngHttp: function($http, $upload, logger) {
+    httpProvider: $httpProvider,
+    ngHttp: function($http, logger) {
       logger.debug("using $http for comms");
       return {
         request: function(config) {
-          switch (config.swMethod) {
-            case 'upload':
-              return this.upload(config.url, config);
-            default:
-              return $http(config);
-          }
+          return $http(config);
         },
         get: function(url, config) {
           logger.log("ngget:" + url);
@@ -41,12 +37,6 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         "delete": function(url, config) {
           logger.log("ngdelete:" + url);
           return $http["delete"](url, config);
-        },
-        upload: function(url, config) {
-          logger.log("ngpupload:" + url);
-          config.swMethod = 'upload';
-          config.url = url;
-          return $upload.upload(config);
         }
       };
     },
@@ -73,65 +63,34 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
 
      $httpProvider.defaults.headers.* configuration
      */
-    forgeHttp: function($http, $injector, $q, $rootScope, $upload, forge, ngForgeUtils, logger) {
+    forgeHttp: function($http, $injector, $q, $rootScope, forge, ngForgeUtils, logger) {
       var reversedInterceptors;
       logger.debug("using forge for comms");
       reversedInterceptors = [];
-      angular.forEach(this.interceptors, function(interceptorFactory) {
+      angular.forEach(this.httpProvider.interceptors, function(interceptorFactory) {
         return reversedInterceptors.unshift(angular.isString(interceptorFactory) ? $injector.get(interceptorFactory) : $injector.invoke(interceptorFactory));
       });
       return {
-        _convertRequest: function(config) {
-          config['accepts'] = ['application/json'];
-          if (config.file == null) {
-            config['dataType'] = config.responseType || 'json';
-          }
-          config['type'] = config.method.toUpperCase();
-          if (config.file != null) {
-            config['files'] = [config.file];
-            delete config.file;
-          }
-          return config;
-        },
         request: function(config) {
-          switch (config.swMethod) {
-            case 'upload':
-              return this.upload(config.url, config);
-            case 'jsonp':
-              return $http(config);
-            default:
-              return this._doRequest(config.method, config.url, config);
-          }
+          return this._basicRequest(config.method, config.url, config);
         },
         get: function(url, config) {
           return this._getRequest(url, config);
         },
         post: function(url, data, config) {
-          return this._dataRequest('POST', url, data, config);
+          return this._basicRequest('post', url, config, data);
         },
         put: function(url, data, config) {
-          return this._dataRequest('PUT', url, data, config);
+          return this._basicRequest('put', url, config, data);
         },
         patch: function(url, data, config) {
-          return this._dataRequest('PATCH', url, data, config);
+          return this._basicRequest('patch', url, config, data);
         },
         "delete": function(url, config) {
-          return this._basicRequest('DELETE', url, config);
+          return this._basicRequest('delete', url, config);
         },
         jsonp: function(url, config) {
-          config.swMethod = 'jsonp';
-          return $http.jsonp(url, config);
-        },
-        upload: function(url, config) {
-          config.swMethod = 'upload';
-          logger.log("upload: " + url);
-          config.url = url;
-          return $upload.upload(config);
-        },
-        _dataRequest: function(method, url, data, config) {
-          return this._doRequest(method, url, angular.extend(config || {}, {
-            data: JSON.stringify(data)
-          }));
+          return this._basicRequest('jsonp', url, config);
         },
         _getRequest: function(url, config) {
           var cache, cachedResp, deferred, handleResponse, isSuccess, promise, resolvePromise, resolvePromiseWithResult;
@@ -184,17 +143,8 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
             }
             return resolvePromiseWithResult(response);
           };
-          this._basicRequest('GET', url, config).then(handleResponse, handleResponse);
+          this._basicRequest('get', url, config).then(handleResponse, handleResponse);
           return promise;
-        },
-        _basicRequest: function(method, url, config) {
-          if (config && config.params) {
-            return this._doRequest(method, url, angular.extend(config || {}, {
-              data: config.params
-            }));
-          } else {
-            return this._doRequest(method, url, config);
-          }
         },
         _forgeRequester: function(forgeOptions) {
           var deferred;
@@ -236,15 +186,42 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
           forge.request.ajax(forgeOptions);
           return deferred.promise;
         },
-        _doRequest: function(method, url, config) {
-          var chain, forgeOptions, promise, rejectFn, thenFn;
-          logger.log("forge" + (method.toLowerCase()) + ":" + url + ":" + ((config != null ? config.data : void 0) ? JSON.stringify(config.data) : void 0));
-          forgeOptions = this._convertRequest(angular.extend(config || {}, {
+        _basicRequest: function(method, url, config, data) {
+          var convertRequest, ngHttpConfig, options;
+          convertRequest = function(cfg, options) {
+            var extcfg, requestcfg;
+            extcfg = angular.extend(options || {}, {
+              contentType: 'application/json; charset=utf-8',
+              accepts: ['application/json'],
+              type: cfg.method.toUpperCase()
+            });
+            if (cfg.file) {
+              extcfg.files = [cfg.file];
+            } else {
+              extcfg.dataType = cfg.responseType || 'json';
+            }
+            requestcfg = angular.extend(cfg || {}, extcfg);
+            delete requestcfg.file;
+            return requestcfg;
+          };
+          ngHttpConfig = angular.extend(config || {}, {
             method: method,
-            url: url,
-            contentType: 'application/json; charset=utf-8'
-          }));
-          logger.debug(JSON.stringify(forgeOptions));
+            url: url
+          });
+          if (method === 'jsonp') {
+            return $http.jsonp(url, ngHttpConfig);
+          } else {
+            options = data ? {
+              data: JSON.stringify(data)
+            } : config && config.params ? {
+              data: config.params
+            } : void 0;
+            return this._doRequest(convertRequest(ngHttpConfig, options));
+          }
+        },
+        _doRequest: function(config) {
+          var chain, promise, rejectFn, thenFn;
+          logger.log("forge" + (config.method.toLowerCase()) + ":" + config.url + ":" + ((config != null ? config.data : void 0) ? JSON.stringify(config.data) : void 0));
           promise = $q.when(forgeOptions);
           chain = [this._forgeRequester, void 0];
           angular.forEach(reversedInterceptors, function(interceptor) {
