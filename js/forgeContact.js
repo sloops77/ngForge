@@ -252,9 +252,9 @@ angular.module('ngForge').provider('$forgeContact', function() {
         ]
       }, {
         "id": "3",
-        "displayName": "Lucy Cleaner",
+        "displayName": "Lucy Cleaner 45",
         "name": {
-          "formatted": "Lucy Cleaner",
+          "formatted": "Lucy Cleaner 45",
           "familyName": "Cleaner",
           "givenName": "Lucy",
           "middleName": "middle",
@@ -278,7 +278,7 @@ angular.module('ngForge').provider('$forgeContact', function() {
         ]
       }, {
         "id": "33",
-        "displayName": "Ches",
+        "displayName": "Ches ;",
         "name": {
           "formatted": "Ches",
           "familyName": "",
@@ -326,6 +326,31 @@ angular.module('ngForge').provider('$forgeContact', function() {
           }, {
             "value": "+447312311232",
             "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "14",
+        "displayName": "הגית אלון",
+        "name": {
+          "formatted": "הגית אלון",
+          "familyName": "אלון",
+          "givenName": "הגית",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "phoneNumbers": [
+          {
+            "value": "+972727474747",
+            "type": "home",
             "pref": false
           }
         ],
