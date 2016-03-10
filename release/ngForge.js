@@ -1,7 +1,7 @@
 /*!
  * Copyright 2015 Thinking Bytes Ltd.
  *
- * ngForge, v0.2.2
+ * ngForge, v0.2.3
  * Angular wrappers for Trigger.io (forge) modules.
  * http://trigger.io/
  * http://angularjs.org/
@@ -152,6 +152,22 @@ angular.module('ngForge').provider('$forge', function() {
       }
     }]
   }
+});
+
+angular.module('ngForge').provider('$forgeCamera', function() {
+  'use strict';
+
+  return {
+    $get: ['$forge', 'ngForgeUtils', function($forge, ngForgeUtils) {
+      var ngCamera = {
+        getImage: function() {
+          success = ngForgeUtils.isFunction(arguments[0]) ? arguments[0] : arguments[1];
+          return success();
+        }
+      };
+      return ngForgeUtils.liftObject($forge.dummy ? ngCamera : forge.camera);
+    }]
+  };
 });
 
 angular.module('ngForge').provider('$forgeContact', function() {
@@ -408,9 +424,9 @@ angular.module('ngForge').provider('$forgeContact', function() {
         ]
       }, {
         "id": "3",
-        "displayName": "Lucy Cleaner",
+        "displayName": "Lucy Cleaner 45",
         "name": {
-          "formatted": "Lucy Cleaner",
+          "formatted": "Lucy Cleaner 45",
           "familyName": "Cleaner",
           "givenName": "Lucy",
           "middleName": "middle",
@@ -434,7 +450,7 @@ angular.module('ngForge').provider('$forgeContact', function() {
         ]
       }, {
         "id": "33",
-        "displayName": "Ches",
+        "displayName": "Ches ;",
         "name": {
           "formatted": "Ches",
           "familyName": "",
@@ -482,6 +498,31 @@ angular.module('ngForge').provider('$forgeContact', function() {
           }, {
             "value": "+447312311232",
             "type": "mobile",
+            "pref": false
+          }
+        ],
+        "photos": [
+          {
+            "value": "data:image/jpg;base64,ABCDEF1234",
+            "type": null,
+            "pref": false
+          }
+        ]
+      }, {
+        "id": "14",
+        "displayName": "הגית אלון",
+        "name": {
+          "formatted": "הגית אלון",
+          "familyName": "אלון",
+          "givenName": "הגית",
+          "middleName": null,
+          "honorificPrefix": "",
+          "honorificSuffic": null
+        },
+        "phoneNumbers": [
+          {
+            "value": "+972727474747",
+            "type": "home",
             "pref": false
           }
         ],
@@ -875,6 +916,21 @@ angular.module('ngForge').provider('$forgeIonicKeyboard', function() {
   };
 });
 
+angular.module('ngForge').provider('$forgeLaunchimage', function() {
+  'use strict';
+
+  return {
+    $get: ['$forge', 'ngForgeUtils', function($forge, ngForgeUtils) {
+      var ngLaunchimage = {
+        hide: function(success, error) {
+          return success();
+        }
+      };
+      return ngForgeUtils.liftObject($forge.dummy ? ngLaunchimage : forge.launchimage);
+    }]
+  };
+});
+
 angular.module('ngForge').factory('$forgeLogger', ['ngForgeUtils', function(ngForgeUtils) {
   var error, group, groupEnd, groups, log, logger, message;
   if (!(window.forge && window.forge.is && window.forge.is.mobile())) {
@@ -1014,6 +1070,50 @@ angular.module('ngForge').provider('$forgeParse', function() {
         return ngForgeUtils.liftObject($forge.dummy ? parseDummy : forge.parse);
       }
     ]
+  };
+});
+
+angular.module('ngForge').provider('$forgePayments', function() {
+  'use strict';
+
+  return {
+    $get: ['$forge', '$forgeLogger', 'ngForgeUtils', function($forge, $forgeLogger, ngForgeUtils) {
+      var ngPayments = {
+        purchaseProduct: function(productId, success, error) {
+          var _this = this;
+          setTimeout(
+            function() {
+              _this.transactionReceived.listeners.forEach(function(listener) {
+                listener(
+                  {productId: productId, purchaseState: 'PURCHASED'},
+                  function() {
+                    $forgeLogger.info("Purchase Confirmed")
+                  }
+                );
+              });
+            },
+            5000
+          );
+          return success();
+        },
+        startSubscription: function(productId, success, error) {
+          return success();
+        },
+        restoreTransactions: function(success, error) {
+          return success();
+        },
+        consumePurchase: function(productId, success, error) {
+          return success();
+        },
+        transactionReceived: {
+          listeners: [],
+          addListener: function(callback) {
+            this.listeners.push(callback);
+          }
+        }
+      };
+      return ngForgeUtils.liftObject($forge.dummy ? ngPayments : forge.payments);
+    }]
   };
 });
 
