@@ -1,7 +1,7 @@
 /*!
  * Copyright 2015 Thinking Bytes Ltd.
  *
- * ngForge, v0.2.3
+ * ngForge, v0.2.4
  * Angular wrappers for Trigger.io (forge) modules.
  * http://trigger.io/
  * http://angularjs.org/
@@ -643,6 +643,10 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
           $forgeLogger.log("ngget:" + url);
           return $http.get(url, config);
         },
+        head: function(url, config) {
+          $forgeLogger.log("nghead:" + url);
+          return $http.head(url, config);
+        },
         jsonp: function(url, config) {
           $forgeLogger.log("ngjsonp:" + url);
           return $http.jsonp(url, config);
@@ -654,6 +658,10 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         put: function(url, data, config) {
           $forgeLogger.log("ngput:" + url + ":" + data);
           return $http.put(url, data, config);
+        },
+        patch: function(url, data, config) {
+          $forgeLogger.log("ngpatch:" + url + ":" + data);
+          return $http.patch(url, data, config);
         },
         "delete": function(url, config) {
           $forgeLogger.log("ngdelete:" + url);
@@ -697,6 +705,9 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         },
         get: function(url, config) {
           return this._getRequest(url, config);
+        },
+        head: function(url, config) {
+          return this._basicRequest('head', url, config);
         },
         post: function(url, data, config) {
           return this._basicRequest('post', url, config, data);
@@ -843,7 +854,7 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         _doRequest: function(config) {
           var chain, promise, rejectFn, thenFn;
           $forgeLogger.log("$forge" + (config.method.toLowerCase()) + ":" + config.url + ":" + ((config != null ? config.data : void 0) ? JSON.stringify(config.data) : void 0));
-          promise = $q.when(forgeOptions);
+          promise = $q.when(config);
           chain = [this._forgeRequester, void 0];
           angular.forEach(reversedInterceptors, function(interceptor) {
             if (interceptor.request || interceptor.requestError) {
