@@ -233,7 +233,7 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         _doRequest: function(config) {
           var chain, promise, rejectFn, thenFn;
           $forgeLogger.log("$forge" + (config.method.toLowerCase()) + ":" + config.url + ":" + ((config != null ? config.data : void 0) ? JSON.stringify(config.data) : void 0));
-          promise = $q.when(forgeOptions);
+          promise = $q.when(config);
           chain = [this._forgeRequester, void 0];
           angular.forEach(reversedInterceptors, function(interceptor) {
             if (interceptor.request || interceptor.requestError) {
