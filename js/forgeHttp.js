@@ -22,6 +22,10 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
           $forgeLogger.log("ngget:" + url);
           return $http.get(url, config);
         },
+        head: function(url, config) {
+          $forgeLogger.log("nghead:" + url);
+          return $http.head(url, config);
+        },
         jsonp: function(url, config) {
           $forgeLogger.log("ngjsonp:" + url);
           return $http.jsonp(url, config);
@@ -33,6 +37,10 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         put: function(url, data, config) {
           $forgeLogger.log("ngput:" + url + ":" + data);
           return $http.put(url, data, config);
+        },
+        patch: function(url, data, config) {
+          $forgeLogger.log("ngpatch:" + url + ":" + data);
+          return $http.patch(url, data, config);
         },
         "delete": function(url, config) {
           $forgeLogger.log("ngdelete:" + url);
@@ -76,6 +84,9 @@ angular.module('ngForge').provider('$forgeHttp', ['$httpProvider', function($htt
         },
         get: function(url, config) {
           return this._getRequest(url, config);
+        },
+        head: function(url, config) {
+          return this._basicRequest('head', url, config);
         },
         post: function(url, data, config) {
           return this._basicRequest('post', url, config, data);
