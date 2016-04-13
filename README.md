@@ -62,7 +62,7 @@ Currently the following adapters are provided:
 | forge.parse   | $forgeParse | | _all implemented_
 | forge.payments   | $forgePayments | | _all implemented_
 | forge.platform    | $forgePlatform | | _all implemented_
-| forge.prefs  | $forgePrefs   | prefsKey | | _all implemented_.           
+| forge.prefs  | $forgePrefs   | prefsKey | _all implemented_           
 | forge.segmentio   | $forgeSegmentio | | _all implemented_
 | forge.sms   | $forgeSms  |  | _all implemented_      
 | forge.ionic_keyboard** | $forgeIonicKeyboard |  | _all implemented_
